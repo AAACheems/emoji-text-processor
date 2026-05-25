@@ -13,7 +13,6 @@
 
 /* 圆角变量 - 柔和圆角设计 */
 :root {
-    --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 10px;
     --radius-lg: 12px;
@@ -74,9 +73,6 @@
     --text-muted: rgba(15, 23, 42, 0.5);
 }
 
-html {
-    transition: background 0.5s ease;
-}
 
 body {
     font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -147,10 +143,12 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.theme-toggle:hover {
-    background: var(--card-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+@media (hover: hover) {
+    .theme-toggle:hover {
+        background: var(--card-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
 }
 
 .theme-icon {
@@ -220,13 +218,15 @@ body {
 .output-section { animation-delay: 0.3s; }
 .emoji-preview { animation-delay: 0.4s; }
 
-.input-section:hover,
-.output-section:hover,
-.emoji-preview:hover {
-    background: var(--card-hover);
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+@media (hover: hover) {
+    .input-section:hover,
+    .output-section:hover,
+    .emoji-preview:hover {
+        background: var(--card-hover);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
 }
 
 .section-label {
@@ -330,9 +330,11 @@ body {
     letter-spacing: 0.02em;
 }
 
-.btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+@media (hover: hover) {
+    .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+    }
 }
 
 .btn:active:not(:disabled) {
@@ -357,10 +359,12 @@ body {
     border: 1px solid var(--card-border);
 }
 
-.btn-outline:hover:not(:disabled) {
-    background: var(--card-hover);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+@media (hover: hover) {
+    .btn-outline:hover:not(:disabled) {
+        background: var(--card-hover);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
 }
 
 .btn-sm {
@@ -447,6 +451,7 @@ body {
     background: rgba(0, 0, 0, 0.1);
     min-height: 120px;
     border-radius: var(--radius-lg);
+    animation: slideIn 0.3s ease;
 }
 
 .result-text {
@@ -494,9 +499,11 @@ body {
     transition: all 0.3s ease;
 }
 
-.custom-emoji-btn:hover {
-    background: rgba(99, 102, 241, 0.15);
-    transform: translateY(-1px);
+@media (hover: hover) {
+    .custom-emoji-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        transform: translateY(-1px);
+    }
 }
 
 .plus-icon {
@@ -524,10 +531,12 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.emoji-btn:hover {
-    background: rgba(99, 102, 241, 0.15);
-    border-color: var(--primary-color);
-    transform: scale(1.1);
+@media (hover: hover) {
+    .emoji-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: var(--primary-color);
+        transform: scale(1.1);
+    }
 }
 
 .emoji-btn:active {
@@ -581,9 +590,11 @@ body {
     border-radius: var(--radius-sm);
 }
 
-.close-btn:hover {
-    color: var(--text-primary);
-    background: var(--card-hover);
+@media (hover: hover) {
+    .close-btn:hover {
+        color: var(--text-primary);
+        background: var(--card-hover);
+    }
 }
 
 .custom-emoji-input-area {
@@ -635,8 +646,10 @@ body {
     justify-content: center;
 }
 
-.custom-emoji-item:hover .custom-emoji-delete {
-    opacity: 1;
+@media (hover: hover) {
+    .custom-emoji-item:hover .custom-emoji-delete {
+        opacity: 1;
+    }
 }
 
 /* ==================== Toast 通知 ==================== */
@@ -708,14 +721,6 @@ body {
     }
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.output-content {
-    animation: slideIn 0.3s ease;
-}
 
 /* ==================== 响应式设计 ==================== */
 @media (max-width: 768px) {

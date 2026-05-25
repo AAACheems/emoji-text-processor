@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Emoji 智能文本处理器 - 为您的文字自动添加表情符号，智能匹配 emoji">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>😊</text></svg>">
     <title>Emoji 智能文本处理</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,12 +14,12 @@
         <header class="header">
             <div class="header-top">
                 <div class="logo">
-                    <span class="logo-icon">😊</span>
+                    <span class="logo-icon" aria-hidden="true">😊</span>
                     <h1>Emoji 智能处理</h1>
                 </div>
                 <div class="header-controls">
-                    <button id="theme-toggle" class="theme-toggle" title="切换主题">
-                        <span class="theme-icon">🌙</span>
+                    <button id="theme-toggle" class="theme-toggle" title="切换主题" aria-label="切换主题">
+                        <span class="theme-icon" aria-hidden="true">🌙</span>
                         <span class="theme-text">暗模式</span>
                     </button>
                 </div>
@@ -28,14 +30,15 @@
         <main class="main-content">
             <div class="input-section">
                 <label for="input-text" class="section-label">
-                    <span class="label-icon">✏️</span>
+                    <span class="label-icon" aria-hidden="true">✏️</span>
                     <span>输入文本</span>
                 </label>
                 <textarea 
                     id="input-text" 
                     class="input-textarea"
                     placeholder="在这里输入您想要处理的文本内容...&#10;&#10;例如：今天天气真好，我想去公园散步，然后喝一杯咖啡。&#10;&#10;系统会自动为您匹配合适的 emoji！"
-                    rows="6"></textarea>
+                    rows="6"
+                    maxlength="2000"></textarea>
                 <div class="input-footer">
                     <span class="char-count">0 / 2000</span>
                     <span class="hint">💡 输入日常文本，系统会智能匹配 emoji</span>
@@ -44,28 +47,28 @@
 
             <div class="button-section">
                 <button id="process-btn" class="btn btn-primary">
-                    <span class="btn-icon">✨</span>
+                    <span class="btn-icon" aria-hidden="true">✨</span>
                     <span>智能处理</span>
                 </button>
                 <button id="clear-btn" class="btn btn-secondary">
-                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-icon" aria-hidden="true">🗑️</span>
                     <span>清除内容</span>
                 </button>
                 <button id="copy-btn" class="btn btn-outline" disabled>
-                    <span class="btn-icon">📋</span>
+                    <span class="btn-icon" aria-hidden="true">📋</span>
                     <span>复制结果</span>
                 </button>
             </div>
 
             <div class="output-section" id="output-section">
                 <label class="section-label">
-                    <span class="label-icon">🎨</span>
+                    <span class="label-icon" aria-hidden="true">🎨</span>
                     <span>处理结果</span>
                     <span class="result-badge" id="result-badge">0 个 emoji</span>
                 </label>
                 <div class="output-container">
                     <div class="output-placeholder" id="output-placeholder">
-                        <span class="placeholder-icon">📭</span>
+                        <span class="placeholder-icon" aria-hidden="true">📭</span>
                         <p>处理结果将在这里显示</p>
                         <p class="placeholder-hint">点击「智能处理」按钮开始</p>
                     </div>
@@ -79,7 +82,7 @@
                 <div class="preview-header">
                     <h3 class="preview-title">常用 Emoji 预览</h3>
                     <button id="custom-emoji-btn" class="custom-emoji-btn" title="添加自定义 emoji">
-                        <span class="plus-icon">+</span>
+                        <span class="plus-icon" aria-hidden="true">+</span>
                         <span>添加自定义</span>
                     </button>
                 </div>
@@ -107,11 +110,16 @@
         </footer>
     </div>
 
-    <div class="toast" id="toast">
-        <span class="toast-icon">✅</span>
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <span class="toast-icon" aria-hidden="true">✅</span>
         <span class="toast-message">复制成功！</span>
     </div>
 
     <script src="script.js"></script>
+    <noscript>
+        <div style="text-align:center;padding:2rem;color:var(--text-muted, #999);">
+            ⚠️ 您的浏览器未启用 JavaScript，本应用需要 JavaScript 才能运行。
+        </div>
+    </noscript>
 </body>
 </html>

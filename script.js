@@ -115,8 +115,7 @@ const STORAGE_KEYS = {
 // ==================== 状态管理 ====================
 const state = {
     customEmojis: [],
-    currentTheme: 'dark',
-    isProcessing: false
+    currentTheme: 'dark'
 };
 
 // ==================== DOM 元素 ====================
@@ -163,9 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== 主题功能 ====================
 function initTheme() {
-    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
-    if (savedTheme) {
-        state.currentTheme = savedTheme;
+    try {
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+        if (savedTheme) {
+            state.currentTheme = savedTheme;
+        }
+    } catch (e) {
+        // localStorage 不可用（如 Safari 私密模式），使用默认主题
     }
     updateThemeUI();
     applyTheme();
@@ -173,7 +176,9 @@ function initTheme() {
 
 function toggleTheme() {
     state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem(STORAGE_KEYS.THEME, state.currentTheme);
+    try {
+        localStorage.setItem(STORAGE_KEYS.THEME, state.currentTheme);
+    } catch (e) {}
     updateThemeUI();
     applyTheme();
     showToast('🎨', `已切换到${state.currentTheme === 'dark' ? '暗色' : '亮色'}主题 💫`);
@@ -190,9 +195,13 @@ function applyTheme() {
 
 // ==================== 自定义 Emoji ====================
 function initCustomEmojis() {
-    const savedEmojis = localStorage.getItem(STORAGE_KEYS.CUSTOM_EMOJIS);
-    if (savedEmojis) {
-        state.customEmojis = JSON.parse(savedEmojis);
+    try {
+        const savedEmojis = localStorage.getItem(STORAGE_KEYS.CUSTOM_EMOJIS);
+        if (savedEmojis) {
+            state.customEmojis = JSON.parse(savedEmojis);
+        }
+    } catch (e) {
+        state.customEmojis = [];
     }
     renderCustomEmojis();
 }
@@ -219,7 +228,11 @@ function addCustomEmoji() {
     }
     
     state.customEmojis.push(emoji);
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_EMOJIS, JSON.stringify(state.customEmojis));
+    try {
+        localStorage.setItem(STORAGE_KEYS.CUSTOM_EMOJIS, JSON.stringify(state.customEmojis));
+    } catch (e) {
+        // localStorage 不可用时静默失败
+    }
     renderCustomEmojis();
     elements.customEmojiInput.value = '';
     showToast('✅', '已添加自定义 emoji 🎉');
@@ -229,7 +242,9 @@ function deleteCustomEmoji(emoji) {
     const index = state.customEmojis.indexOf(emoji);
     if (index > -1) {
         state.customEmojis.splice(index, 1);
-        localStorage.setItem(STORAGE_KEYS.CUSTOM_EMOJIS, JSON.stringify(state.customEmojis));
+        try {
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_EMOJIS, JSON.stringify(state.customEmojis));
+        } catch (e) {}
         renderCustomEmojis();
         showToast('🗑️', '已删除自定义 emoji 👋');
     }
@@ -290,17 +305,17 @@ function insertEmoji(emoji) {
 // ==================== 字符计数 ====================
 function updateCharCount() {
     const count = elements.inputTextarea.value.length;
-    elements.charCount.textContent = `${count} / 2000`;
+    const displayCount = Math.min(count, 2000);
+    elements.charCount.textContent = `${displayCount} / 2000`;
     
     if (count > 2000) {
         elements.charCount.style.color = 'var(--danger-color)';
         elements.inputTextarea.value = elements.inputTextarea.value.substring(0, 2000);
-        updateCharCount();
+        elements.processBtn.disabled = false;
     } else {
         elements.charCount.style.color = '';
+        elements.processBtn.disabled = count === 0;
     }
-    
-    elements.processBtn.disabled = count === 0 || state.isProcessing;
 }
 
 // ==================== 智能文本处理（优化版本）====================
@@ -317,12 +332,11 @@ function processText(text) {
     for (const [category, data] of Object.entries(emojiDatabase)) {
         for (const keyword of data.keywords) {
             if (text.includes(keyword) && !processedWords.has(keyword)) {
-                const emoji = getRandomEmoji(data.emojis);
                 result = result.replace(new RegExp(keyword, 'g'), match => {
                     if (!processedWords.has(match)) {
                         emojiCount++;
                         processedWords.add(match);
-                        return `${match}${emoji}`;
+                        return `${match}${getRandomEmoji(data.emojis)}`;
                     }
                     return match;
                 });
@@ -365,10 +379,11 @@ function displayResult(result, emojiCount) {
     elements.outputContent.style.display = 'block';
     elements.copyBtn.disabled = false;
     
+    // 重启动画：先清除再应用，确保每次处理结果都有入场动画
     elements.outputContent.style.animation = 'none';
-    setTimeout(() => {
-        elements.outputContent.style.animation = 'slideIn 0.3s ease';
-    }, 10);
+    requestAnimationFrame(() => {
+        elements.outputContent.style.animation = '';
+    });
 }
 
 // ==================== 复制功能 ====================
@@ -388,13 +403,19 @@ async function copyToClipboard() {
 }
 
 // ==================== Toast 通知 ====================
+let toastTimer = null;
+
 function showToast(icon, message) {
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+    }
     elements.toastIcon.textContent = icon;
     elements.toastMessage.textContent = message;
     elements.toast.classList.add('show');
     
-    setTimeout(() => {
+    toastTimer = setTimeout(() => {
         elements.toast.classList.remove('show');
+        toastTimer = null;
     }, 2000);
 }
 
@@ -416,35 +437,28 @@ function clearAll() {
 function initEventListeners() {
     elements.processBtn.addEventListener('click', () => {
         const text = elements.inputTextarea.value.trim();
-        if (!text || state.isProcessing) return;
+        if (!text || elements.processBtn.disabled) return;
         
-        // 开始处理
-        state.isProcessing = true;
         elements.processBtn.disabled = true;
         elements.processBtn.classList.add('btn-loading');
         elements.processBtn.querySelector('.btn-icon').textContent = '⏳';
         
-        // 使用 requestAnimationFrame 优化性能，减少延迟到 150ms
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                const { result, emojiCount } = processText(text);
-                displayResult(result, emojiCount);
-                
-                // 恢复按钮状态
-                state.isProcessing = false;
-                elements.processBtn.classList.remove('btn-loading');
-                elements.processBtn.querySelector('.btn-icon').textContent = '✨';
-                elements.processBtn.disabled = false;
-                updateCharCount();
-                
-                // 显示完成提示
-                if (emojiCount > 0) {
-                    showToast('🎉', `处理完成！添加了 ${emojiCount} 个表情 🎨`);
-                } else {
-                    showToast('🤔', '没有找到匹配的关键词哦~');
-                }
-            }, 150);
-        });
+        // 允许 UI 更新按钮状态后再执行同步处理
+        setTimeout(() => {
+            const { result, emojiCount } = processText(text);
+            displayResult(result, emojiCount);
+            
+            elements.processBtn.classList.remove('btn-loading');
+            elements.processBtn.querySelector('.btn-icon').textContent = '✨';
+            elements.processBtn.disabled = false;
+            updateCharCount();
+            
+            if (emojiCount > 0) {
+                showToast('🎉', `处理完成！添加了 ${emojiCount} 个表情 🎨`);
+            } else {
+                showToast('🤔', '没有找到匹配的关键词哦~');
+            }
+        }, 300);
     });
 
     elements.clearBtn.addEventListener('click', clearAll);
