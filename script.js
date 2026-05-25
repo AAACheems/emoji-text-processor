@@ -363,11 +363,142 @@ function processText(text) {
         return word;
     }).join('');
 
+    // 语义补全：为无 emoji 的句子智能添加语境 emoji
+    const semantic = addSemanticEmojis(result);
+    result = semantic.result;
+    emojiCount += semantic.addedCount;
+
     return { result, emojiCount };
 }
 
 function getRandomEmoji(emojis) {
     return emojis[Math.floor(Math.random() * emojis.length)];
+}
+
+// ==================== 语义分析引擎 ====================
+const semanticEngine = {
+    getMood(sentence) {
+        if (/[！!]/.test(sentence)) return 'excited';
+        if (/[？?]/.test(sentence)) return 'questioning';
+        if (/…|\.{3,}/.test(sentence)) return 'pensive';
+        if (/[～~]/.test(sentence)) return 'playful';
+        const t = sentence.trim();
+        if (/[吧]$/.test(t)) return 'suggestive';
+        if (/[吗么]$/.test(t)) return 'questioning';
+        if (/[呢]$/.test(t)) return 'rhetorical';
+        if (/^(哎|哦|呃|嗯|哈|嘿|啊|呀)/.test(t)) return 'exclamation';
+        return 'neutral';
+    },
+
+    getSentiment(sentence) {
+        const positives = ['好','棒','赞','美','喜欢','爱','开心','快乐','幸福','感谢','谢谢','恭喜','厉害','优秀','漂亮','帅','顺利','成功','美好','满意','完美'];
+        const negatives = ['坏','差','烂','讨厌','恨','难过','悲伤','痛苦','累','烦','无聊','生气','愤怒','糟糕','失败','哭','伤心','失望','倒霉','崩溃','焦虑'];
+        let score = 0;
+        positives.forEach(w => { if (sentence.includes(w)) score++; });
+        negatives.forEach(w => { if (sentence.includes(w)) score--; });
+        return score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral';
+    },
+
+    getTopic(sentence) {
+        const topics = [
+            { kws: ['吃','喝','饭','餐','菜','饮','食','饿','渴','味道','好吃'], emojis: ['🍽️','🥢','🍴','😋'] },
+            { kws: ['看书','阅读','书','小说','文章','读'], emojis: ['📖','📚','📕'] },
+            { kws: ['音乐','唱歌','歌','听','曲','旋律'], emojis: ['🎵','🎶','🎤','🎧'] },
+            { kws: ['运动','锻炼','健身','跑步','打球','游泳','练'], emojis: ['🏃','💪','🏋️','⚽'] },
+            { kws: ['电影','电视','视频','看'], emojis: ['🎬','📺','🎥','🍿'] },
+            { kws: ['睡觉','睡','困','晚安','疲','乏','熬夜'], emojis: ['😴','🌙','💤','🛏️'] },
+            { kws: ['旅行','旅游','出去','出发','逛逛','玩','度假','游玩'], emojis: ['✈️','🚗','🎒','🗺️'] },
+            { kws: ['电脑','手机','游戏','打字','编程','写代码'], emojis: ['🎮','🖥️','📱','⌨️'] },
+            { kws: ['一起','我们','大家','聚会','见面','团','组','队'], emojis: ['👫','🤝','🎉','👥'] },
+            { kws: ['生日','快乐','生日快乐'], emojis: ['🎂','🎉','🎁','🥳'] },
+            { kws: ['谢谢','感谢','多谢','感激'], emojis: ['🙏','😊','❤️','🌸'] },
+            { kws: ['对不起','抱歉','不好意思','道歉','赔罪'], emojis: ['😔','🙏','😅','😳'] },
+            { kws: ['再见','拜拜','明天见','下次','回见'], emojis: ['👋','👋🏻','😊'] },
+            { kws: ['加油','努力','奋斗','坚持','冲','拼','继续'], emojis: ['💪','🔥','🎯','🚀'] },
+            { kws: ['学习','作业','考试','毕业','上课','老师','同学','学校'], emojis: ['📚','✏️','🎓','📝'] },
+            { kws: ['工作','上班','同事','老板','客户','项目','加班'], emojis: ['💼','📊','👔','💻'] },
+            { kws: ['健康','生病','感冒','医院','药','身体','医生'], emojis: ['🏥','💊','🩺','🌿'] },
+        ];
+        for (const topic of topics) {
+            for (const kw of topic.kws) {
+                if (sentence.includes(kw)) {
+                    return topic.emojis[Math.floor(Math.random() * topic.emojis.length)];
+                }
+            }
+        }
+        return null;
+    },
+
+    analyze(sentence) {
+        const trimmed = sentence.trim();
+        if (trimmed.length <= 1) return null;
+
+        const topicEmoji = this.getTopic(trimmed);
+        if (topicEmoji) return topicEmoji;
+
+        const mood = this.getMood(trimmed);
+        const sentiment = this.getSentiment(trimmed);
+
+        const table = {
+            'excited_positive':    ['🎉','🔥','🤩','🥳','✨'],
+            'excited_negative':    ['😤','💢','😡','🤬'],
+            'excited_neutral':     ['⚡','🔥','💪','🚀','🎯'],
+            'questioning_positive':['🤔','🧐','💭'],
+            'questioning_negative':['😕','🤨','😒','😐'],
+            'questioning_neutral': ['🤔','❓','🤷','🧐'],
+            'pensive_*':    ['💭','😌','🌸','🌙','✨'],
+            'playful_*':    ['😜','✨','🎵','💫','🌟'],
+            'suggestive_*': ['💡','👍','✨','😊','👉'],
+            'rhetorical_*': ['🤔','😏','💭','🤷','✨'],
+            'exclamation_*':['😮','👀','💬','🤭','😲'],
+            'neutral_positive': ['😊','👍','✨','🌟'],
+            'neutral_negative': ['😔','💧','🍂','🌧️','😞'],
+            'neutral_neutral':  ['💬','📝','✨','👉','💫'],
+        };
+
+        const special = ['pensive','playful','suggestive','rhetorical','exclamation'];
+        const key = special.includes(mood) ? `${mood}_*` : `${mood}_${sentiment}`;
+        const list = table[key] || table['neutral_neutral'];
+        return list[Math.floor(Math.random() * list.length)];
+    }
+};
+
+function hasEmoji(str) {
+    for (let i = 0; i < str.length; i++) {
+        const cp = str.codePointAt(i);
+        if (cp === undefined) continue;
+        if ((cp >= 0x1F000 && cp <= 0x1FFFF) ||
+            (cp >= 0x2600 && cp <= 0x27BF) ||
+            cp === 0x00A9 || cp === 0x00AE) {
+            return true;
+        }
+        if (cp > 0xFFFF) i++;
+    }
+    return false;
+}
+
+function addSemanticEmojis(text) {
+    const sentenceRegex = /[^。！？\n!?]+[。！？\n!?]?/g;
+    const sentences = text.match(sentenceRegex);
+    if (!sentences) return { result: text, addedCount: 0 };
+
+    let result = '';
+    let addedCount = 0;
+
+    for (let raw of sentences) {
+        const trimmed = raw.trim();
+        if (trimmed.length <= 1) { result += raw; continue; }
+        if (hasEmoji(trimmed)) { result += raw; continue; }
+
+        const emoji = semanticEngine.analyze(trimmed);
+        if (emoji) {
+            raw = raw.replace(/([。！？\n!?]*)$/, (m) => ` ${emoji}${m}`);
+            addedCount++;
+        }
+        result += raw;
+    }
+
+    return { result, addedCount };
 }
 
 // ==================== 显示结果 ====================
