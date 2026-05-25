@@ -13,6 +13,10 @@
 
 /* 圆角变量 - 柔和圆角设计 */
 :root {
+    --glass-blur: 12px;
+    --glass-saturate: 1.4;
+    --glass-opacity: 0.92;
+    --glass-border-opacity: 0.12;
     --radius-sm: 8px;
     --radius-md: 10px;
     --radius-lg: 12px;
@@ -101,11 +105,11 @@ body {
 @keyframes fadeInContainer {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) scale(0.98);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -170,17 +174,24 @@ body {
 
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    50% { transform: translateY(-12px); }
 }
 
 .header h1 {
     font-size: 2rem;
     font-weight: 700;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color), var(--primary-color));
+    background-size: 300% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -0.02em;
+    animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
 .subtitle {
@@ -211,6 +222,9 @@ body {
     opacity: 0;
     transform: translateY(20px);
     animation: slideIn 0.5s ease forwards;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: 0 0 0 1px var(--card-border), 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .input-section { animation-delay: 0.1s; }
@@ -224,8 +238,8 @@ body {
     .emoji-preview:hover {
         background: var(--card-hover);
         border-color: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     }
 }
 
@@ -252,6 +266,7 @@ body {
     background: rgba(99, 102, 241, 0.15);
     color: var(--primary-color);
     border-radius: var(--radius-full);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ==================== 文本输入区 ==================== */
@@ -279,7 +294,7 @@ body {
 .input-textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.08);
     transform: scale(1.005);
 }
 
@@ -332,8 +347,8 @@ body {
 
 @media (hover: hover) {
     .btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
     }
 }
 
@@ -378,6 +393,28 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
+}
+
+/* 按钮涟漪效果 */
+.btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.btn:active:not(:disabled)::after {
+    opacity: 1;
+    transition: opacity 0s;
+}
+
+.btn {
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-icon {
@@ -502,7 +539,8 @@ body {
 @media (hover: hover) {
     .custom-emoji-btn:hover {
         background: rgba(99, 102, 241, 0.15);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
     }
 }
 
@@ -528,14 +566,15 @@ body {
     border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    user-select: none;
 }
 
 @media (hover: hover) {
     .emoji-btn:hover {
         background: rgba(99, 102, 241, 0.15);
         border-color: var(--primary-color);
-        transform: scale(1.1);
+        transform: scale(1.1) rotate(-3deg);
     }
 }
 
@@ -657,7 +696,7 @@ body {
     position: fixed;
     bottom: 2rem;
     left: 50%;
-    transform: translateX(-50%) translateY(100px);
+    transform: translateX(-50%) translateY(120px) scale(0.85);
     display: flex;
     align-items: center;
     gap: 0.625rem;
@@ -675,11 +714,29 @@ body {
 
 .toast.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toast-icon {
     font-size: 1rem;
+}
+
+/* ==================== 自定义滚动条 ==================== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 /* ==================== 页脚 ==================== */
@@ -713,11 +770,11 @@ body {
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
