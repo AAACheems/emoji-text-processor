@@ -48,7 +48,7 @@ const emojiDatabase = {
     },
     // 工作/学习
     work: {
-        keywords: ['工作', '学习', '作业', '报告', '会议', '项目', '代码', '编程', '设计', '写作', '考试', '面试', '毕业', '论文', '教案', '备课', '培训', '演讲', '汇报', '总结', '计划', '方案', '预算', '汇报', '出差', '招聘', '简历', '升职', '加薪', '辞职', '退休'],
+        keywords: ['工作', '学习', '作业', '报告', '会议', '项目', '代码', '编程', '设计', '写作', '考试', '面试', '毕业', '论文', '教案', '备课', '培训', '演讲', '汇报', '总结', '计划', '方案', '预算', '出差', '招聘', '简历', '升职', '加薪', '辞职', '退休'],
         emojis: ['💼', '📊', '📈', '📉', '📋', '📝', '💻', '⌨️', '🎨', '✏️', '📚', '🎓', '👔', '🏆']
     },
     // 交通
@@ -68,7 +68,7 @@ const emojiDatabase = {
     },
     // 科技
     tech: {
-        keywords: ['电脑', '手机', '网络', 'WiFi', '软件', '应用', '游戏', 'AI', '人工智能', '数据', '服务器', '网页', '网站', 'APP', '程序', '系统', '更新', '下载', '上传', '登录', '注册', '密码', '账号', '邮箱', '消息', '通知', '设置', '搜索', '视频', '直播', '视频'],
+        keywords: ['电脑', '手机', '网络', 'WiFi', '软件', '应用', '游戏', 'AI', '人工智能', '数据', '服务器', '网页', '网站', 'APP', '程序', '系统', '更新', '下载', '上传', '登录', '注册', '密码', '账号', '邮箱', '消息', '通知', '设置', '搜索', '视频', '直播'],
         emojis: ['💻', '📱', '🖥️', '⌨️', '🖱️', '💾', '📀', '🎮', '📡', '🔋', '🔌', '🛜']
     },
     // 社交/问候
@@ -318,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCustomEmojis();
     initEmojiGrid();
     initEventListeners();
+    updateCharCount();
     elements.inputTextarea.focus();
 });
 
@@ -342,7 +343,7 @@ function toggleTheme() {
     } catch (e) {}
     updateThemeUI();
     applyTheme();
-    showToast('🎨', `已切换到${state.currentTheme === 'dark' ? '暗色' : '亮色'}主题 💫`);
+    showToast('🎨', `已切换到${state.currentTheme === 'dark' ? '暗色' : '亮色'}主题 💫`, 'info');
 }
 
 function updateThemeUI() {
@@ -379,12 +380,12 @@ function addCustomEmoji() {
     const emoji = elements.customEmojiInput.value.trim();
     
     if (!emoji) {
-        showToast('⚠️', '请输入一个 emoji 😊');
+        showToast('⚠️', '请输入一个 emoji 😊', 'warning');
         return;
     }
     
     if (state.customEmojis.includes(emoji)) {
-        showToast('⚠️', '这个 emoji 已经在列表中了 🤨');
+        showToast('⚠️', '这个 emoji 已经在列表中了 🤨', 'warning');
         return;
     }
     
@@ -396,7 +397,7 @@ function addCustomEmoji() {
     }
     renderCustomEmojis();
     elements.customEmojiInput.value = '';
-    showToast('✅', '已添加自定义 emoji 🎉');
+    showToast('✅', '已添加自定义 emoji 🎉', 'success');
 }
 
 function deleteCustomEmoji(emoji) {
@@ -407,7 +408,7 @@ function deleteCustomEmoji(emoji) {
             localStorage.setItem(STORAGE_KEYS.CUSTOM_EMOJIS, JSON.stringify(state.customEmojis));
         } catch (e) {}
         renderCustomEmojis();
-        showToast('🗑️', '已删除自定义 emoji 👋');
+        showToast('🗑️', '已删除自定义 emoji 👋', 'info');
     }
 }
 
@@ -635,9 +636,15 @@ function hasEmoji(str) {
     for (let i = 0; i < str.length; i++) {
         const cp = str.codePointAt(i);
         if (cp === undefined) continue;
-        if ((cp >= 0x1F000 && cp <= 0x1FFFF) ||
-            (cp >= 0x2600 && cp <= 0x27BF) ||
-            cp === 0x00A9 || cp === 0x00AE) {
+        // 精确的 Emoji Unicode 区块（排除麻将牌、扑克牌等非表情符号）
+        if ((cp >= 0x1F300 && cp <= 0x1F5FF) ||  // 杂项符号与象形文字
+            (cp >= 0x1F600 && cp <= 0x1F64F) ||  // 表情符号
+            (cp >= 0x1F680 && cp <= 0x1F6FF) ||  // 交通与地图
+            (cp >= 0x1F900 && cp <= 0x1F9FF) ||  // 补充符号与象形文字
+            (cp >= 0x1FA70 && cp <= 0x1FAFF) ||  // 符号与象形文字扩展-A
+            (cp >= 0x2600 && cp <= 0x27BF) ||     // 杂项符号 + 装饰符号
+            (cp >= 0x2300 && cp <= 0x23FF) ||     // 杂项技术（⌚⌛等）
+            cp === 0x00A9 || cp === 0x00AE) {     // © ®
             return true;
         }
         if (cp > 0xFFFF) i++;
@@ -695,7 +702,7 @@ function displayResult(result, emojiCount) {
 async function copyToClipboard() {
     try {
         await navigator.clipboard.writeText(elements.resultText.textContent);
-        showToast('✅', '复制成功！快去分享吧 📤');
+        showToast('✅', '复制成功！快去分享吧 📤', 'success');
     } catch (err) {
         const textArea = document.createElement('textarea');
         textArea.value = elements.resultText.textContent;
@@ -703,23 +710,23 @@ async function copyToClipboard() {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        showToast('✅', '复制成功！快去分享吧 📤');
+        showToast('✅', '复制成功！快去分享吧 📤', 'success');
     }
 }
 
 // ==================== Toast 通知 ====================
 let toastTimer = null;
 
-function showToast(icon, message) {
+function showToast(icon, message, type = 'success') {
     if (toastTimer) {
         clearTimeout(toastTimer);
     }
     elements.toastIcon.textContent = icon;
     elements.toastMessage.textContent = message;
-    elements.toast.classList.add('show');
+    elements.toast.className = `toast toast-${type} show`;
     
     toastTimer = setTimeout(() => {
-        elements.toast.classList.remove('show');
+        elements.toast.className = `toast toast-${type}`;
         toastTimer = null;
     }, 2000);
 }
@@ -735,7 +742,7 @@ function clearAll() {
     elements.processBtn.disabled = true;
     updateCharCount();
     elements.inputTextarea.focus();
-    showToast('🧹', '已清除所有内容 ✨');
+    showToast('🧹', '已清除所有内容 ✨', 'info');
 }
 
 // ==================== 事件监听器 ====================
@@ -759,9 +766,9 @@ function initEventListeners() {
             updateCharCount();
             
             if (emojiCount > 0) {
-                showToast('🎉', `处理完成！添加了 ${emojiCount} 个表情 🎨`);
+                showToast('🎉', `处理完成！添加了 ${emojiCount} 个表情 🎨`, 'success');
             } else {
-                showToast('🤔', '没有找到匹配的关键词哦~');
+                showToast('🤔', '没有找到匹配的关键词哦~', 'warning');
             }
         }, 300);
     });
@@ -773,6 +780,19 @@ function initEventListeners() {
     elements.customEmojiBtn.addEventListener('click', toggleCustomEmojiSection);
     elements.closeCustomEmoji.addEventListener('click', toggleCustomEmojiSection);
     elements.addCustomEmoji.addEventListener('click', addCustomEmoji);
+
+    // 按钮涟漪效果
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            this.style.setProperty('--ripple-x', `${x}px`);
+            this.style.setProperty('--ripple-y', `${y}px`);
+            this.classList.add('ripple-active');
+            setTimeout(() => this.classList.remove('ripple-active'), 500);
+        });
+    });
 
     elements.inputTextarea.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key === 'Enter') {
