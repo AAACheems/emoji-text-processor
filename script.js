@@ -266,6 +266,51 @@ const wordEmojiMap = {
     '茶': ['🍵', '🫖', '☕']
 };
 
+// ==================== Trie 匹配引擎 ====================
+class TrieNode {
+    constructor() {
+        this.children = {};
+        this.emojis = null;
+    }
+}
+
+let _keywordTrie = null;
+
+function getKeywordTrie() {
+    if (_keywordTrie) return _keywordTrie;
+    _keywordTrie = new TrieNode();
+
+    for (const [, data] of Object.entries(emojiDatabase)) {
+        for (const keyword of data.keywords) {
+            _insertTrie(_keywordTrie, keyword, data.emojis);
+        }
+    }
+
+    for (const [keyword, emojis] of Object.entries(wordEmojiMap)) {
+        _insertTrie(_keywordTrie, keyword, emojis);
+    }
+
+    return _keywordTrie;
+}
+
+function _insertTrie(root, keyword, emojis) {
+    let node = root;
+    for (let i = 0; i < keyword.length; i++) {
+        const ch = keyword[i];
+        if (!node.children[ch]) {
+            node.children[ch] = new TrieNode();
+        }
+        node = node.children[ch];
+    }
+    if (!node.emojis) {
+        node.emojis = emojis;
+    }
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // ==================== 配置 ====================
 const STORAGE_KEYS = {
     THEME: 'emoji-app-theme',
@@ -275,7 +320,7 @@ const STORAGE_KEYS = {
 // ==================== 状态管理 ====================
 const state = {
     customEmojis: [],
-    currentTheme: 'light'
+    currentTheme: 'dark'
 };
 
 // ==================== DOM 元素 ====================
@@ -480,61 +525,48 @@ function updateCharCount() {
     }
 }
 
-// ==================== 智能文本处理（优化版本）====================
+// ==================== 智能文本处理（Trie 单次扫描）====================
 function processText(text) {
     if (!text || text.trim() === '') {
         return { result: '', emojiCount: 0 };
     }
 
+    const trie = getKeywordTrie();
+    const matches = [];
+
+    for (let i = 0; i < text.length; i++) {
+        let node = trie;
+        let bestMatch = null;
+        let bestEnd = i;
+
+        for (let j = i; j < text.length; j++) {
+            node = node.children[text[j]];
+            if (!node) break;
+            if (node.emojis) {
+                bestMatch = node.emojis;
+                bestEnd = j;
+            }
+        }
+
+        if (bestMatch) {
+            matches.push({ end: bestEnd, emojis: bestMatch });
+            i = bestEnd;
+        }
+    }
+
     let result = text;
-    let emojiCount = 0;
-    const processedWords = new Set();
-
-    // === 第一步：emojiDatabase 匹配（按关键词长度降序，长词优先） ===
-    const dbEntries = [];
-    for (const [, data] of Object.entries(emojiDatabase)) {
-        for (const keyword of data.keywords) {
-            dbEntries.push({ keyword, emojis: data.emojis });
-        }
-    }
-    dbEntries.sort((a, b) => b.keyword.length - a.keyword.length);
-
-    for (const { keyword, emojis } of dbEntries) {
-        if (result.includes(keyword) && !processedWords.has(keyword)) {
-            result = result.replace(new RegExp(keyword, 'g'), match => {
-                if (!processedWords.has(match)) {
-                    emojiCount++;
-                    processedWords.add(match);
-                    return `${match}${getRandomEmoji(emojis)}`;
-                }
-                return match;
-            });
-        }
+    for (let k = matches.length - 1; k >= 0; k--) {
+        const match = matches[k];
+        const emoji = getRandomEmoji(match.emojis);
+        result = result.slice(0, match.end + 1) + emoji + result.slice(match.end + 1);
     }
 
-    // === 第二步：wordEmojiMap 短语匹配（同样按长度降序） ===
-    const wmEntries = Object.entries(wordEmojiMap);
-    wmEntries.sort((a, b) => b[0].length - a[0].length);
-
-    for (const [keyword, emojis] of wmEntries) {
-        if (result.includes(keyword) && !processedWords.has(keyword)) {
-            result = result.replace(new RegExp(keyword, 'g'), match => {
-                if (!processedWords.has(match)) {
-                    emojiCount++;
-                    processedWords.add(match);
-                    return `${match}${getRandomEmoji(emojis)}`;
-                }
-                return match;
-            });
-        }
-    }
-
-    // === 第三步：语义补全（为无 emoji 的句子智能添加） ===
     const semantic = addSemanticEmojis(result);
-    result = semantic.result;
-    emojiCount += semantic.addedCount;
 
-    return { result, emojiCount };
+    return {
+        result: semantic.result,
+        emojiCount: matches.length + semantic.addedCount
+    };
 }
 
 function getRandomEmoji(emojis) {

@@ -13,6 +13,27 @@
 
 /* 圆角变量 - 柔和圆角设计 */
 :root {
+    /* 暗色主题（默认） */
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary-color: #8b5cf6;
+    --accent-color: #f472b6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+
+    --bg-gradient-start: #0f0c29;
+    --bg-gradient-middle: #302b63;
+    --bg-gradient-end: #24243e;
+
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --card-hover: rgba(255, 255, 255, 0.12);
+
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+
     --glass-blur: 12px;
     --glass-saturate: 1.4;
     --glass-opacity: 0.92;
@@ -27,33 +48,6 @@
     --toast-warning: #f59e0b;
     --toast-error: #ef4444;
     --toast-info: #6366f1;
-}
-
-/* 主题变量定义 */
-[data-theme="dark"] {
-    /* 暗色主题 */
-    --primary-color: #6366f1;
-    --primary-hover: #4f46e5;
-    --secondary-color: #8b5cf6;
-    --accent-color: #f472b6;
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
-    --danger-color: #ef4444;
-    
-    /* 背景颜色 */
-    --bg-gradient-start: #0f0c29;
-    --bg-gradient-middle: #302b63;
-    --bg-gradient-end: #24243e;
-    
-    /* 卡片颜色 */
-    --card-bg: rgba(255, 255, 255, 0.08);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --card-hover: rgba(255, 255, 255, 0.12);
-    
-    /* 文字颜色 */
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.5);
 }
 
 [data-theme="light"] {
@@ -537,6 +531,11 @@ body {
     word-break: break-word;
     letter-spacing: 0.02em;
     animation: resultReveal 0.5s ease;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .result-text {
+    text-shadow: none;
 }
 
 @keyframes resultReveal {
@@ -548,10 +547,6 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-[data-theme="dark"] .result-text {
-    text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 /* ==================== Emoji 预览区 ==================== */
