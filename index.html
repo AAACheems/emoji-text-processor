@@ -1,125 +1,158 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Emoji 智能文本处理器 - 为您的文字自动添加表情符号，智能匹配 emoji">
+    <meta name="theme-color" content="#0b0a1a">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>😊</text></svg>">
-    <title>Emoji 智能文本处理</title>
+    <title>Emoji 智能文本处理器</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <div class="container">
-        <header class="header">
-            <div class="header-top">
-                <div class="logo">
-                    <span class="logo-icon" aria-hidden="true">😊</span>
-                    <h1>Emoji 智能处理</h1>
-                </div>
-                <div class="header-controls">
-                    <button id="theme-toggle" class="theme-toggle" title="切换主题" aria-label="切换主题">
-                        <span class="theme-icon" aria-hidden="true">🌙</span>
-                        <span class="theme-text">暗模式</span>
-                    </button>
+
+    <!-- 背景装饰：流动光斑 + 网格 -->
+    <div class="bg-scene" aria-hidden="true">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-noise"></div>
+    </div>
+
+    <div class="app">
+        <!-- 顶部 -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo" aria-hidden="true"><span>😊</span><i>✨</i></div>
+                <div class="brand-text">
+                    <h1>Emoji 智能文本处理器</h1>
+                    <p>让文字更生动 · 语义匹配 · 一键生成</p>
                 </div>
             </div>
-            <p class="subtitle">让您的文字更加生动有趣</p>
+            <button id="theme-toggle" class="theme-toggle" title="切换主题" aria-label="切换主题">
+                <span class="theme-icon" aria-hidden="true">🌙</span>
+                <span class="theme-text">暗色</span>
+            </button>
         </header>
 
         <main class="main-content">
-            <div class="input-section">
-                <label for="input-text" class="section-label">
-                    <span class="label-icon" aria-hidden="true">✏️</span>
-                    <span>输入文本</span>
-                </label>
-                <textarea 
-                    id="input-text" 
-                    class="input-textarea"
-                    placeholder="在这里输入您想要处理的文本内容...&#10;&#10;例如：今天天气真好，我想去公园散步，然后喝一杯咖啡。&#10;&#10;系统会自动为您匹配合适的 emoji！"
-                    rows="6"
-                    maxlength="2000"></textarea>
-                <div class="input-footer">
-                    <span class="char-count">0 / 2000</span>
-                    <span class="hint">💡 输入日常文本，系统会智能匹配 emoji</span>
-                </div>
-            </div>
 
-            <div class="button-section">
-                <button id="process-btn" class="btn btn-primary">
+            <!-- 输入卡片 -->
+            <section class="card input-card">
+                <div class="card-head">
+                    <h2><span class="card-icon" aria-hidden="true">✏️</span>输入文本</h2>
+                    <span class="card-hint">Ctrl + Enter 快捷处理</span>
+                </div>
+
+                <div class="textarea-shell">
+                    <textarea
+                        id="input-text"
+                        class="input-textarea"
+                        placeholder="在这里输入您想要处理的文本内容…&#10;&#10;例如：今天天气真好，我想去公园散步，然后喝一杯咖啡。"
+                        rows="6"
+                        maxlength="2000"
+                        spellcheck="false"></textarea>
+                    <div class="textarea-toolbar">
+                        <label class="live-toggle" for="live-toggle" title="开启后输入即自动处理">
+                            <input type="checkbox" id="live-toggle">
+                            <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+                            <span class="live-label">实时处理</span>
+                        </label>
+                        <span id="char-count" class="char-count">0 / 2000</span>
+                    </div>
+                </div>
+
+                <div class="examples">
+                    <span class="examples-label">💡 试试这些：</span>
+                    <div class="examples-chips">
+                        <button type="button" class="example-chip" data-example="今天天气真好，我想去公园散步，然后喝一杯咖啡，心情超级棒！">🌤️ 天气心情</button>
+                        <button type="button" class="example-chip" data-example="周五晚上我要和朋友吃火锅、看电影，周末一起去爬山！">🎬 周末计划</button>
+                        <button type="button" class="example-chip" data-example="项目终于上线了，感谢大家这段时间的辛苦付出，我爱你们！">🎉 工作日常</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 操作按钮 -->
+            <div class="actions">
+                <button id="process-btn" class="btn btn-primary" disabled>
                     <span class="btn-icon" aria-hidden="true">✨</span>
-                    <span>智能处理</span>
+                    <span class="btn-text">智能处理</span>
+                    <kbd class="btn-kbd">Ctrl↵</kbd>
                 </button>
-                <button id="clear-btn" class="btn btn-secondary">
-                    <span class="btn-icon" aria-hidden="true">🗑️</span>
-                    <span>清除内容</span>
+                <button id="clear-btn" class="btn btn-ghost" disabled>
+                    <span class="btn-icon" aria-hidden="true">🧹</span>
+                    <span class="btn-text">清除</span>
                 </button>
-                <button id="copy-btn" class="btn btn-outline" disabled>
+                <button id="copy-btn" class="btn btn-ghost" disabled>
                     <span class="btn-icon" aria-hidden="true">📋</span>
-                    <span>复制结果</span>
+                    <span class="btn-text">复制结果</span>
                 </button>
             </div>
 
-            <div class="output-section" id="output-section">
-                <label class="section-label">
-                    <span class="label-icon" aria-hidden="true">🎨</span>
-                    <span>处理结果</span>
-                    <span class="result-badge" id="result-badge">0 个 emoji</span>
-                </label>
-                <div class="output-container">
-                    <div class="output-placeholder" id="output-placeholder">
-                        <span class="placeholder-icon" aria-hidden="true">📭</span>
-                        <p>处理结果将在这里显示</p>
-                        <p class="placeholder-hint">点击「智能处理」按钮开始</p>
-                    </div>
-                    <div class="output-content" id="output-content" style="display: none;">
-                        <div class="result-text" id="result-text"></div>
+            <!-- 结果卡片 -->
+            <section class="card output-card">
+                <div class="card-head">
+                    <h2><span class="card-icon" aria-hidden="true">🎨</span>处理结果</h2>
+                    <div class="result-meta">
+                        <span id="result-badge" class="badge">0 个 emoji</span>
+                        <span id="result-time" class="time-note">—</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="emoji-preview">
-                <div class="preview-header">
-                    <h3 class="preview-title">常用 Emoji 预览</h3>
-                    <button id="custom-emoji-btn" class="custom-emoji-btn" title="添加自定义 emoji">
-                        <span class="plus-icon" aria-hidden="true">+</span>
-                        <span>添加自定义</span>
+                <div class="output-wrap">
+                    <div id="output-placeholder" class="output-placeholder">
+                        <div class="placeholder-emoji" aria-hidden="true">📭</div>
+                        <p class="placeholder-title">等待处理</p>
+                        <p class="placeholder-sub">输入文字后点击「智能处理」，或开启实时处理</p>
+                    </div>
+                    <div id="output-content" class="output-content" hidden>
+                        <div id="result-text" class="result-text"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Emoji 面板 -->
+            <section class="card emoji-card">
+                <div class="card-head">
+                    <h2><span class="card-icon" aria-hidden="true">😀</span>常用 Emoji</h2>
+                    <button id="custom-emoji-btn" class="chip-btn" title="添加自定义 emoji">
+                        <span aria-hidden="true">＋</span>自定义
                     </button>
                 </div>
-                <div class="emoji-grid" id="emoji-grid">
-                    <!-- Emoji 按钮将通过 JavaScript 动态生成 -->
+
+                <div id="emoji-grid" class="emoji-grid" aria-label="常用 emoji 快捷插入"></div>
+
+                <div id="custom-emoji-section" class="custom-section" hidden>
+                    <div class="custom-head">
+                        <h3>我的自定义 Emoji</h3>
+                        <button id="close-custom-emoji" class="icon-close" title="关闭" aria-label="关闭">×</button>
+                    </div>
+                    <div class="custom-input-row">
+                        <input type="text" id="custom-emoji-input" class="custom-emoji-input" placeholder="输入一个 emoji，如 🎉" maxlength="8" autocomplete="off">
+                        <button id="add-custom-emoji" class="btn btn-small btn-primary">添加</button>
+                    </div>
+                    <div id="custom-emoji-list" class="custom-emoji-list"></div>
+                    <p id="custom-empty" class="custom-empty">还没有自定义 emoji，添加一个试试吧～</p>
                 </div>
-                <div class="custom-emoji-section" id="custom-emoji-section" style="display: none;">
-                    <div class="custom-emoji-header">
-                        <h4 class="custom-emoji-title">我的自定义 Emoji</h4>
-                        <button id="close-custom-emoji" class="close-btn" title="关闭">×</button>
-                    </div>
-                    <div class="custom-emoji-input-area">
-                        <input type="text" id="custom-emoji-input" class="custom-emoji-input" placeholder="输入一个 emoji（如 🎉）">
-                        <button id="add-custom-emoji" class="btn btn-sm btn-primary">添加</button>
-                    </div>
-                    <div class="custom-emoji-list" id="custom-emoji-list">
-                        <!-- 自定义 emoji 将显示在这里 -->
-                    </div>
-                </div>
-            </div>
+            </section>
         </main>
 
-        <footer class="footer">
-            <p>使用 AI 技术为您的文本智能添加表情符号</p>
+        <footer class="app-footer">
+            <p>✨ 零依赖 · 本地运行 · 打开即用</p>
         </footer>
     </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite">
-        <span class="toast-icon" aria-hidden="true">✅</span>
-        <span class="toast-message">复制成功！</span>
+    <!-- Toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <span class="toast-icon" aria-hidden="true"></span>
+        <span class="toast-message"></span>
+        <span class="toast-progress" aria-hidden="true"></span>
     </div>
 
     <script src="script.js"></script>
     <noscript>
-        <div style="text-align:center;padding:2rem;color:var(--text-muted, #999);">
-            ⚠️ 您的浏览器未启用 JavaScript，本应用需要 JavaScript 才能运行。
-        </div>
+        <div style="text-align:center;padding:2rem;color:#999;">⚠️ 您的浏览器未启用 JavaScript，本应用需要 JavaScript 才能运行。</div>
     </noscript>
 </body>
 </html>
